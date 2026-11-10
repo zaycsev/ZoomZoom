@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ApplicationPackage
+    SchemaVersion="1.0"
+    AppVersion="1.1.1"
+    ProductCode="{7B2E5C41-9A3D-4F18-B6C7-2D8E4A19F503}"
+    Name="Зум-зум"
+    Description="Масштабирование чертежа с сохранением размерных чисел, разделение по листам и сборка чертежей"
+    Author="zaycsev">
+
+  <CompanyDetails Name="zaycsev" Url="https://github.com/zaycsev/ZoomZoom" />
+
+  <!-- Два блока: AutoCAD сам выбирает тот, чей диапазон серий ему подходит.
+       Platform="AutoCAD*|Civil3D*" покрывает и чистый AutoCAD, и вертикали.
+
+       deploy.ps1 вырезает блок, если соответствующая DLL не собиралась
+       (API этого семейства на машине нет) — иначе AutoCAD пишет в журнал
+       ошибку про отсутствующий модуль. -->
+
+  <!-- 2015 (R20.0) ... 2018 (R22.0): .NET Framework 4.5, API 2015 из NuGet -->
+  <Components Description="AutoCAD / Civil 3D 2015-2018">
+    <RuntimeRequirements OS="Win64" Platform="AutoCAD*|Civil3D*" SeriesMin="R20.0" SeriesMax="R22.0" />
+    <ComponentEntry
+        AppName="ZoomZoom"
+        Version="1.1.1"
+        ModuleName="./Contents/net45/ZoomZoom.dll"
+        AppDescription="Зум-зум: панель на ленте, команды ZZ*, ZOOMZOOM* и DWG*"
+        LoadOnAutoCADStartup="True" />
+  </Components>
+
+  <!-- 2019 (R23.0) ... 2024 (R24.3): .NET Framework 4.7 -->
+  <Components Description="AutoCAD / Civil 3D 2019-2024">
+    <RuntimeRequirements OS="Win64" Platform="AutoCAD*|Civil3D*" SeriesMin="R23.0" SeriesMax="R24.3" />
+    <ComponentEntry
+        AppName="ZoomZoom"
+        Version="1.1.1"
+        ModuleName="./Contents/net47/ZoomZoom.dll"
+        AppDescription="Зум-зум: панель на ленте, команды ZZ*, ZOOMZOOM* и DWG*"
+        LoadOnAutoCADStartup="True" />
+  </Components>
+
+  <!-- 2025 (R25.0) и новее: .NET 8. SeriesMax не задан намеренно — будущие
+       релизы подхватят сборку сами, пока Autodesk не сменит рантайм снова. -->
+  <Components Description="AutoCAD / Civil 3D 2025 и новее">
+    <RuntimeRequirements OS="Win64" Platform="AutoCAD*|Civil3D*" SeriesMin="R25.0" />
+    <ComponentEntry
+        AppName="ZoomZoom"
+        Version="1.1.1"
+        ModuleName="./Contents/net8.0-windows/ZoomZoom.dll"
+        AppDescription="Зум-зум: панель на ленте, команды ZZ*, ZOOMZOOM* и DWG*"
+        LoadOnAutoCADStartup="True" />
+  </Components>
+
+</ApplicationPackage>

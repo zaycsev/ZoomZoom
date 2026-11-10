@@ -1,0 +1,100 @@
+{
+  "version": "2.0.0",
+
+  // ${workspaceFolder} — папка, открытая в VS Code. Абсолютных путей здесь
+  // больше нет: проект можно переносить куда угодно, задачи не ломаются.
+  // Версию AutoCAD/Civil 3D скрипт находит сам (см. acad-env.ps1).
+  "tasks": [
+    {
+      "label": "Собрать + запустить (новейшая версия)",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", "${workspaceFolder}/run-c3d.ps1"
+      ],
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": "$msCompile",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    },
+    {
+      "label": "Собрать + запустить (выбрать версию и профиль)",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", "${workspaceFolder}/run-c3d.ps1",
+        "-Release", "${input:release}",
+        "-Profile", "${input:profile}"
+      ],
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "problemMatcher": "$msCompile",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    },
+    {
+      "label": "Только собрать и установить (без запуска)",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", "${workspaceFolder}/deploy.ps1"
+      ],
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "problemMatcher": "$msCompile",
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    },
+    {
+      "label": "Показать установленные версии и профили",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", "${workspaceFolder}/run-c3d.ps1",
+        "-List"
+      ],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    },
+    {
+      "label": "Проверить, что запустится (ничего не собирая)",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", "${workspaceFolder}/run-c3d.ps1",
+        "-DryRun"
+      ],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    }
+  ],
+
+  // Ответ "auto" = «решай сам»: скрипт возьмёт новейшую версию и профиль по
+  // умолчанию. Именно слово, а не пустая строка: пустой аргумент в командной
+  // строке теряется, и тогда -Release съел бы следующий ключ.
+  // Список версий — задача «Показать установленные версии и профили».
+  "inputs": [
+    {
+      "id": "release",
+      "type": "promptString",
+      "description": "Год или серия (2019, 2024, R23.0) либо auto — новейшая.",
+      "default": "auto"
+    },
+    {
+      "id": "profile",
+      "type": "promptString",
+      "description": "Профиль (Metric, Imperial, Russia) либо auto — по умолчанию.",
+      "default": "auto"
+    }
+  ]
+}

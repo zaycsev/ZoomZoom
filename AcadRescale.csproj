@@ -1,0 +1,179 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- ===================================================================
+       Где взять управляемое API AutoCAD.
+
+       Сборка, собранная под старый acdbmgd, грузится и в более новых
+       релизах того же семейства, а наоборот — нет. Поэтому для каждого
+       семейства берём САМУЮ СТАРУЮ установленную версию: получается одна
+       DLL на всё семейство.
+
+         net45          AutoCAD/Civil 3D 2015..2018 (R20.0..R22.0) — API из NuGet
+         net47          AutoCAD/Civil 3D 2019..2024 (R23.0..R24.3)
+         net8.0-windows AutoCAD/Civil 3D 2025+      (R25.0+) — установленный или NuGet
+
+       net47 собирается, только если его API есть на машине. net45 и
+       net8.0-windows без установленного AutoCAD берут официальные пакеты
+       Autodesk из NuGet (-p:SkipLegacy=true — не брать).
+
+       Переопределить вручную:
+         dotnet build -p:AcadRoot="D:\Autodesk"
+         dotnet build -f net47 -p:AcadRefPath="D:\Autodesk\AutoCAD 2022"
+  =================================================================== -->
+  <PropertyGroup>
+    <AcadRoot Condition="'$(AcadRoot)' == ''">$(ProgramFiles)\Autodesk</AcadRoot>
+    <AcadRoot Condition="'$(AcadRoot)' == '\Autodesk'">C:\Program Files\Autodesk</AcadRoot>
+  </PropertyGroup>
+
+  <PropertyGroup Label=".NET Framework: 2019..2024">
+    <AcadRefPath47 Condition="'$(AcadRefPath47)' == '' AND Exists('$(AcadRoot)\AutoCAD 2019\acdbmgd.dll')">$(AcadRoot)\AutoCAD 2019</AcadRefPath47>
+    <AcadRefPath47 Condition="'$(AcadRefPath47)' == '' AND Exists('$(AcadRoot)\AutoCAD 2020\acdbmgd.dll')">$(AcadRoot)\AutoCAD 2020</AcadRefPath47>
+    <AcadRefPath47 Condition="'$(AcadRefPath47)' == '' AND Exists('$(AcadRoot)\AutoCAD 2021\acdbmgd.dll')">$(AcadRoot)\AutoCAD 2021</AcadRefPath47>
+    <AcadRefPath47 Condition="'$(AcadRefPath47)' == '' AND Exists('$(AcadRoot)\AutoCAD 2022\acdbmgd.dll')">$(AcadRoot)\AutoCAD 2022</AcadRefPath47>
+    <AcadRefPath47 Condition="'$(AcadRefPath47)' == '' AND Exists('$(AcadRoot)\AutoCAD 2023\acdbmgd.dll')">$(AcadRoot)\AutoCAD 2023</AcadRefPath47>
+    <AcadRefPath47 Condition="'$(AcadRefPath47)' == '' AND Exists('$(AcadRoot)\AutoCAD 2024\acdbmgd.dll')">$(AcadRoot)\AutoCAD 2024</AcadRefPath47>
+  </PropertyGroup>
+
+  <PropertyGroup Label=".NET 8: 2025 и новее">
+    <AcadRefPath8 Condition="'$(AcadRefPath8)' == '' AND Exists('$(AcadRoot)\AutoCAD 2025\acdbmgd.dll')">$(AcadRoot)\AutoCAD 2025</AcadRefPath8>
+    <AcadRefPath8 Condition="'$(AcadRefPath8)' == '' AND Exists('$(AcadRoot)\AutoCAD 2026\acdbmgd.dll')">$(AcadRoot)\AutoCAD 2026</AcadRefPath8>
+    <AcadRefPath8 Condition="'$(AcadRefPath8)' == '' AND Exists('$(AcadRoot)\AutoCAD 2027\acdbmgd.dll')">$(AcadRoot)\AutoCAD 2027</AcadRefPath8>
+    <AcadRefPath8 Condition="'$(AcadRefPath8)' == '' AND Exists('$(AcadRoot)\AutoCAD 2028\acdbmgd.dll')">$(AcadRoot)\AutoCAD 2028</AcadRefPath8>
+    <AcadRefPath8 Condition="'$(AcadRefPath8)' == '' AND Exists('$(AcadRoot)\AutoCAD 2029\acdbmgd.dll')">$(AcadRoot)\AutoCAD 2029</AcadRefPath8>
+  </PropertyGroup>
+
+  <!-- AutoCAD 2015..2018 (R20.0..R22.0): .NET Framework 4.5. Этих релизов на
+       машине обычно уже нет, поэтому API берётся из официальных пакетов
+       Autodesk в NuGet (AutoCAD.NET 20.0.x — это 2015). Отключить, например
+       без интернета: dotnet build -p:SkipLegacy=true -->
+  <PropertyGroup>
+    <TargetFrameworks Condition="'$(SkipLegacy)' != 'true'">net45</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFrameworks Condition="'$(AcadRefPath47)' != '' AND '$(TargetFrameworks)' == ''">net47</TargetFrameworks>
+    <TargetFrameworks Condition="'$(AcadRefPath47)' != '' AND '$(TargetFrameworks)' != ''">$(TargetFrameworks);net47</TargetFrameworks>
+    <!-- 2025+ не установлен — API берётся из NuGet (AutoCAD.NET 25.0.x). -->
+    <AcadNuGet8 Condition="'$(AcadRefPath8)' == '' AND '$(SkipLegacy)' != 'true'">true</AcadNuGet8>
+    <TargetFrameworks Condition="('$(AcadRefPath8)' != '' OR '$(AcadNuGet8)' == 'true') AND '$(TargetFrameworks)' == ''">net8.0-windows</TargetFrameworks>
+    <TargetFrameworks Condition="('$(AcadRefPath8)' != '' OR '$(AcadNuGet8)' == 'true') AND '$(TargetFrameworks)' != '' AND !$(TargetFrameworks.Contains('net8.0-windows'))">$(TargetFrameworks);net8.0-windows</TargetFrameworks>
+
+    <!-- Ни одного API не нашли: даём SDK хоть какой-то TFM, чтобы он не упал
+         невнятной ошибкой, а сборку останавливаем понятным сообщением ниже. -->
+    <AcadApiMissing Condition="'$(TargetFrameworks)' == ''">true</AcadApiMissing>
+    <TargetFrameworks Condition="'$(TargetFrameworks)' == ''">net47</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AcadRefPath Condition="'$(AcadRefPath)' == '' AND '$(TargetFramework)' == 'net47'">$(AcadRefPath47)</AcadRefPath>
+    <AcadRefPath Condition="'$(AcadRefPath)' == '' AND '$(TargetFramework)' == 'net8.0-windows'">$(AcadRefPath8)</AcadRefPath>
+  </PropertyGroup>
+
+  <Target Name="AcadApiCheck" BeforeTargets="PrepareForBuild" Condition="'$(AcadApiMissing)' == 'true'">
+    <Error Text="Не найдено управляемое API AutoCAD в &quot;$(AcadRoot)&quot;. Установите AutoCAD или Civil 3D, либо укажите папку: dotnet build -p:AcadRoot=&quot;путь\к\Autodesk&quot;" />
+  </Target>
+
+  <PropertyGroup>
+    <AssemblyName>ZoomZoom</AssemblyName>
+    <RootNamespace>ZoomZoom</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodePage>65001</CodePage>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+    <Company>zaycsev</Company>
+    <Product>Зум-зум</Product>
+    <Version>1.1.1</Version>
+    <Authors>zaycsev</Authors>
+    <Copyright>Copyright (C) 2026 zaycsev. GPL-3.0-or-later.</Copyright>
+    <!-- Платформ больше одной, поэтому вывод обязан расходиться по папкам:
+         bin\Release\net47\ZoomZoom.dll, bin\Release\net8.0-windows\... -->
+    <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <!-- Значки ленты: Icons\*.png вшиваются в DLL (см. Icons\README.txt). -->
+  <ItemGroup>
+    <EmbeddedResource Include="Icons\*.png" LogicalName="ZoomZoom.Icons.%(Filename).png" />
+  </ItemGroup>
+
+  <!-- Private=false обязательно: DLL AutoCAD не должны копироваться рядом с плагином,
+       иначе AutoCAD грузит вторую копию acdbmgd и падает. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+    <!-- ExcludeAssets=runtime — то же, что Private=false ниже: DLL AutoCAD
+         только для компиляции, рядом с плагином их быть не должно. -->
+    <PackageReference Include="AutoCAD.NET" Version="20.0.1" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="System.Xaml" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows' AND '$(AcadNuGet8)' == 'true'">
+    <PackageReference Include="AutoCAD.NET" Version="25.0.1" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net47' OR ('$(TargetFramework)' == 'net8.0-windows' AND '$(AcadNuGet8)' != 'true')">
+    <Reference Include="acdbmgd">
+      <HintPath>$(AcadRefPath)\acdbmgd.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="acmgd">
+      <HintPath>$(AcadRefPath)\acmgd.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="accoremgd">
+      <HintPath>$(AcadRefPath)\accoremgd.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- Лента (RibbonControl, RibbonButton). -->
+    <Reference Include="AdWindows">
+      <HintPath>$(AcadRefPath)\AdWindows.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- RibbonServices: событие загрузки рабочего пространства. -->
+    <Reference Include="AcWindows">
+      <HintPath>$(AcadRefPath)\AcWindows.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Палитра — WinForms, значки на ленте рисуются средствами WPF.
+       В net47 это ссылки на GAC, в net8 — SDK-переключатели. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net47'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- Хост (acad.exe) приносит свой рантайм; плагину deps.json не нужен. -->
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+  </PropertyGroup>
+
+  <!-- DwGangsta (разделение и сборка чертежей, перенос с видовыми экранами,
+       подсветка экранов) входит во все сборки, в том числе для 2015..2018 (net45):
+       она собирается и с API AutoCAD 2015. Константа GANGSTA осталась от времени,
+       когда для net45 её отключали; Gangsta45=false вернёт то поведение. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45' AND '$(Gangsta45)' == 'false'">
+    <Compile Remove="DwGangsta\**" />
+  </ItemGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' != 'net45' OR '$(Gangsta45)' != 'false'">
+    <DefineConstants>$(DefineConstants);GANGSTA</DefineConstants>
+  </PropertyGroup>
+
+  <!-- dev-tools — локальные инструменты проверки (в репозиторий не входят, со своими
+       проектами). Если папка есть, в плагин она не попадает. -->
+  <ItemGroup>
+    <Compile Remove="dev-tools\**" />
+    <None Remove="dev-tools\**" />
+    <EmbeddedResource Remove="dev-tools\**" />
+  </ItemGroup>
+
+</Project>

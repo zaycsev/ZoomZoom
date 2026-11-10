@@ -1,0 +1,48 @@
+# ── Сборка ─────────────────────────────────────────────────────
+bin/
+obj/
+dist/
+/*.dll
+__pycache__/
+*.pyc
+
+# ── Чертежи AutoCAD: тестовые и рабочие в репозиторий не попадают ──
+Zoom-zoom test dwg/
+testdwgangsta/
+*.dwg
+*.dxf
+*.bak
+*.dwl
+*.dwl2
+*.sv$
+*.ac$
+*.err
+plot.log
+*.log
+
+# ── Внутренние заметки, IDE, агент ─────────────────────────────
+PROGRESS.md
+CLAUDE.md
+.claude/
+.vs/
+# Задачи VS Code (сборка и запуск AutoCAD) — общие, остальное — личное.
+.vscode/*
+!.vscode/tasks.json
+*.code-workspace
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# ── Не нужно для сборки: инструменты проверки, генераторы значков,
+#    опись чертежа (survey.lsp), старые и пробные значки ──────────
+dev-tools/
+survey.lsp
+Icons/old/
+
+# ── ОС ─────────────────────────────────────────────────────────
+Thumbs.db
+ehthumbs.db
+.DS_Store
+desktop.ini
+._*
